@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuikrCar Price Prediction Model</title>
+    <meta name="description" content="Predict car resale value with machine learning. Get instant, accurate valuations powered by a Random Forest Regressor and interactive data analytics.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glass-bg-blur"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-gauge-high"></i>
+                </div>
+                <h1>QuikrCar <span class="gradient-text">Price Prediction</span></h1>
+            </div>
+            <p class="subtitle">Next-gen machine learning engine for precise vehicle valuation and market analytics</p>
+            
+            <!-- Overall Stats Bar -->
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-item">
+                    <span class="stat-value" id="statTotalCars">...</span>
+                    <span class="stat-label">Cars Analyzed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statAvgPrice">...</span>
+                    <span class="stat-label">Avg Resale Price</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statAvgKms">...</span>
+                    <span class="stat-label">Avg Kms Driven</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="statModelAccuracy">96.2%</span>
+                    <span class="stat-label">Model R² Accuracy</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Grid -->
+        <main class="workspace-grid">
+            <!-- Left Panel: Inputs Form -->
+            <section class="panel glass-card form-panel">
+                <div class="panel-header">
+                    <i class="fa-solid fa-sliders"></i>
+                    <h2>Vehicle Specifications</h2>
+                </div>
+                
+                <form id="predictionForm" class="pred-form">
+                    
+                    <!-- Present Price Slider -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="presentPrice">Original Showroom Price</label>
+                            <span class="value-badge"><span id="presentPriceVal">10.0</span> Lakhs</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" id="presentPrice" name="Present_Price" min="0.5" max="50.0" step="0.1" value="10.0">
+                        </div>
+                        <span class="field-hint">Current ex-showroom cost of a new model (1 Lakh = ₹100,000)</span>
+                    </div>
+
+                    <!-- Kms Driven Input + Slider -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="kmsDriven">Kilometers Driven</label>
+                            <span class="value-badge"><span id="kmsDrivenVal">35,000</span> km</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" id="kmsDriven" name="Kms_Driven" min="1000" max="200000" step="1000" value="35000">
+                        </div>
+                        <div class="number-input-fallback">
+                            <i class="fa-solid fa-road"></i>
+                            <input type="number" id="kmsDrivenNum" min="100" max="1000000" value="35000" placeholder="Or type exact km">
+                        </div>
+                    </div>
+
+                    <!-- Car Age Slider -->
+                    <div class="form-group">
+                        <div class="label-row">
+                            <label for="carAge">Vehicle Age</label>
+                            <span class="value-badge"><span id="carAgeVal">4</span> Years</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" id="carAge" name="Car_Age" min="0" max="15" step="1" value="4">
+                        </div>
+                        <span class="field-hint">Calculated as Current Year (2026) - Year of purchase</span>
+                    </div>
+
+                    <!-- Fuel Type Chips -->
+                    <div class="form-group">
+                        <label>Fuel Type</label>
+                        <div class="chip-group" data-input-name="Fuel_Type">
+                            <button type="button" class="chip active" data-value="Petrol">
+                                <i class="fa-solid fa-gas-pump"></i> Petrol
+                            </button>
+                            <button type="button" class="chip" data-value="Diesel">
+                                <i class="fa-solid fa-oil-can"></i> Diesel
+                            </button>
+                            <button type="button" class="chip" data-value="CNG">
+                                <i class="fa-solid fa-leaf"></i> CNG
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Transmission Chips -->
+                    <div class="form-group">
+                        <label>Transmission</label>
+                        <div class="chip-group" data-input-name="Transmission">
+                            <button type="button" class="chip active" data-value="Manual">
+                                <i class="fa-solid fa-gears"></i> Manual
+                            </button>
+                            <button type="button" class="chip" data-value="Automatic">
+                                <i class="fa-solid fa-bolt"></i> Automatic
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Seller Type Chips -->
+                    <div class="form-group">
+                        <label>Seller Type</label>
+                        <div class="chip-group" data-input-name="Seller_Type">
+                            <button type="button" class="chip active" data-value="Dealer">
+                                <i class="fa-solid fa-building"></i> Dealer
+                            </button>
+                            <button type="button" class="chip" data-value="Individual">
+                                <i class="fa-solid fa-user"></i> Individual
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Owner Count Chips -->
+                    <div class="form-group">
+                        <label>Previous Owners</label>
+                        <div class="chip-group" data-input-name="Owner">
+                            <button type="button" class="chip active" data-value="0">0</button>
+                            <button type="button" class="chip" data-value="1">1</button>
+                            <button type="button" class="chip" data-value="2">2</button>
+                            <button type="button" class="chip" data-value="3">3+</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="predictBtn">
+                        <span>Predict Valuation</span>
+                        <i class="fa-solid fa-circle-arrow-right"></i>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Panel: Results & Analytics Dashboard -->
+            <section class="panel-column">
+                
+                <!-- Prediction Results Card -->
+                <div class="panel glass-card result-card">
+                    <div class="panel-header">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <h2>Valuation Estimate</h2>
+                    </div>
+                    
+                    <div class="result-body">
+                        <div class="predicted-value-container">
+                            <div class="predicted-price" id="predictedPrice">₹0</div>
+                            <div class="predicted-price-lakhs"><span id="predictedLakhs">0.00</span> Lakhs</div>
+                            <span class="result-status-tag" id="statusTag">Ready to Predict</span>
+                        </div>
+
+                        <!-- Valuation Details (Depreciation Rate & Stats) -->
+                        <div class="retention-grid">
+                            <div class="retention-gauge-container">
+                                <div class="retention-ring">
+                                    <svg viewBox="0 0 36 36" class="circular-chart">
+                                        <path class="circle-bg"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                        />
+                                        <path class="circle" id="retentionProgress"
+                                            stroke-dasharray="0, 100"
+                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                        />
+                                    </svg>
+                                    <div class="percentage" id="retentionValue">--</div>
+                                </div>
+                                <span class="gauge-label">Value Retained</span>
+                            </div>
+                            
+                            <div class="metrics-list">
+                                <div class="metric-row">
+                                    <span class="m-label">Original Price:</span>
+                                    <span class="m-val" id="metricOrigPrice">--</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="m-label">Total Depreciation:</span>
+                                    <span class="m-val loss-text" id="metricDepr">--</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="m-label">Depreciation Rate:</span>
+                                    <span class="m-val" id="metricRate">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Market Trend Chart Card -->
+                <div class="panel glass-card chart-card">
+                    <div class="panel-header">
+                        <i class="fa-solid fa-chart-area"></i>
+                        <h2>Market Depreciation Curve</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="depreciationChart"></canvas>
+                    </div>
+                    <p class="chart-desc">Shows average resale values based on age in the CarDekho dataset. <span class="chart-user-legend"><i class="fa-solid fa-circle"></i> Your prediction</span> will be plotted on this curve.</p>
+                </div>
+
+                <!-- Secondary Chart Card (Side-by-side or tabbed) -->
+                <div class="panel glass-card chart-card">
+                    <div class="panel-header">
+                        <i class="fa-solid fa-chart-bar"></i>
+                        <h2>Average Value by Fuel & Transmission</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="marketComparisonChart"></canvas>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+        
+        <footer class="app-footer">
+            <p>QuikrCar Price Prediction &copy; 2026. Made with ❤️ using Python, FastAPI, and Vanilla CSS/JS. Machine learning model trained on the Cardekho dataset with a Random Forest Regressor ($R^2 = 0.962$).</p>
+        </footer>
+    </div>
+
+    <!-- Script loading -->
+    <script src="app.js"></script>
+</body>
+</html>
